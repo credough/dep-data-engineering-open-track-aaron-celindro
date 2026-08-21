@@ -83,6 +83,19 @@ WORD_Y_TOLERANCE = 0.5     # tight tolerance to separate overlapping duplicate t
 
 KNOWN_GHOST_LABELS = {"Caloocan City"}
 
+# Whitelist of real NCR cities/municipalities DOE has covered so far
+# (grew from 9 to 12 cities as DOE expanded coverage during 2025-2026).
+# Any parsed "city" value NOT in this set is almost certainly corrupted
+# text (e.g. the known overlapping-label artifact defeating our
+# separation logic on some week where the pixel offset was smaller than
+# expected) and is dropped as a data quality safeguard rather than
+# silently kept. See validate().
+KNOWN_VALID_CITIES = {
+    "Caloocan City", "Quezon City", "Manila City", "Pasig City", "Taguig Cty",
+    "Makati City", "Parañaque City", "Muntinlupa City", "Pasay City",
+    "Marikina City", "Valenzuela City", "Navotas City",
+}
+
 FILENAME_DATE_RE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 
 
@@ -314,6 +327,18 @@ def extract_week_start(filename):
 
 def validate(df):
     issues = 0
+
+    # Safety net: drop any row whose city isn't a known real NCR city.
+    # This catches corrupted text (e.g. the overlapping-label artifact
+    # defeating our word-separation logic on some week) regardless of
+    # exactly which underlying PDF quirk caused it.
+    unknown_city = df[~df["city"].isin(KNOWN_VALID_CITIES)]
+    if len(unknown_city):
+        bad_values = sorted(unknown_city["city"].unique())
+        logger.warning("%d rows have an unrecognized city value and were dropped: %s",
+                        len(unknown_city), bad_values)
+        df = df.drop(unknown_city.index)
+        issues += len(unknown_city)
 
     reported = df[df["status"] == "reported"]
     bad_prices = reported[(reported["price_low"] <= 0) | (reported["price_high"] <= 0)]
