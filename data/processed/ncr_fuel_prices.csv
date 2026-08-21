@@ -5319,30 +5319,6 @@ week_start,city,product,brand,price_low,price_high,status
 2025-12-30,Taguig Cty,RON 95,SHELL,65.27,67.0,reported
 2025-12-30,Taguig Cty,RON 97,SEAOIL,53.5,53.5,reported
 2025-12-30,Taguig Cty,RON 97,SHELL,68.28,70.0,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL,CALTEX,53.31,59.15,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL,PETRON,53.3,53.8,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL,PHOENIX,53.3,53.3,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL,SHELL,56.5,56.8,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL,UNIOIL,53.3,53.8,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL PLUS,CALTEX,58.65,68.89,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL PLUS,PETRON,56.3,56.8,reported
-2026-01-06,CMalaokoactai nC iCtyity,DIESEL PLUS,SHELL,65.0,65.31,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 100,PETRON,64.06,66.72,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,CALTEX,53.7,63.75,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,FLYING,,,no_report
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,PETRON,53.0,55.15,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,PHOENIX,53.0,53.0,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,SHELL,56.99,58.79,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,TOTAL,,,no_report
-2026-01-06,CMalaokoactai nC iCtyity,RON 91,UNIOIL,53.0,55.0,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 95,CALTEX,56.66,72.35,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 95,PETRON,54.8,56.65,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 95,PHOENIX,54.8,54.8,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 95,SHELL,65.18,66.98,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 95,UNIOIL,56.3,56.5,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 97,PHOENIX,68.69,68.69,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 97,SHELL,66.89,68.69,reported
-2026-01-06,CMalaokoactai nC iCtyity,RON 97,UNIOIL,67.5,67.5,reported
 2026-01-06,Caloocan City,DIESEL,CALTEX,55.6,55.6,reported
 2026-01-06,Caloocan City,DIESEL,FLYING,48.45,51.5,reported
 2026-01-06,Caloocan City,DIESEL,INDEPENDENT,48.2,51.85,reported
@@ -5581,30 +5557,6 @@ week_start,city,product,brand,price_low,price_high,status
 2026-01-06,Taguig Cty,RON 95,SHELL,65.18,65.83,reported
 2026-01-06,Taguig Cty,RON 97,SEAOIL,52.9,52.9,reported
 2026-01-06,Taguig Cty,RON 97,SHELL,68.18,68.83,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL,CALTEX,53.51,59.35,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL,PETRON,52.45,53.5,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL,PHOENIX,53.5,53.5,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL,SHELL,56.49,56.7,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL,UNIOIL,53.5,54.0,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL PLUS,CALTEX,58.09,69.09,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL PLUS,PETRON,55.45,56.5,reported
-2026-01-13,CMalaokoactai nC iCtyity,DIESEL PLUS,SHELL,64.99,65.2,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 100,PETRON,63.9,67.02,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,CALTEX,55.45,64.05,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,FLYING,,,no_report
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,PETRON,53.3,55.46,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,PHOENIX,53.3,53.3,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,SHELL,57.29,59.09,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,TOTAL,,,no_report
-2026-01-13,CMalaokoactai nC iCtyity,RON 91,UNIOIL,53.3,55.3,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 95,CALTEX,56.96,72.65,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 95,PETRON,54.7,56.95,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 95,PHOENIX,55.1,55.1,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 95,SHELL,65.48,67.28,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 95,UNIOIL,56.6,56.8,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 97,PHOENIX,67.28,67.28,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 97,SHELL,67.19,68.89,reported
-2026-01-13,CMalaokoactai nC iCtyity,RON 97,UNIOIL,67.8,67.8,reported
 2026-01-13,Caloocan City,DIESEL,CALTEX,55.6,55.6,reported
 2026-01-13,Caloocan City,DIESEL,FLYING,48.55,51.7,reported
 2026-01-13,Caloocan City,DIESEL,INDEPENDENT,48.0,52.05,reported
