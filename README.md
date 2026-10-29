@@ -12,6 +12,7 @@ python scripts/ingest.py              # 1. download weekly PDF bulletins to data
 python scripts/transform.py           # 2. parse PDFs into data/processed/ncr_fuel_prices.csv
 python scripts/load_to_supabase.py    # 3. load the clean dataset into Supabase
 python scripts/run_sql_questions.py   # 4. run and print the SQL business questions
+jupyter notebook notebooks/insights.ipynb   # 5. explore the charts and interpretations
 ```
 
 Requires a `.env` file in the project root with `SUPABASE_DB_URL=<your Supabase connection string>` (not committed to git).
@@ -105,6 +106,35 @@ into a single clean, long-format dataset saved to `data/processed/ncr_fuel_price
 ## SQL Business Questions
 
 `data/processed/ncr_fuel_prices.csv` is loaded into a Supabase (Postgres) database via `scripts/load_to_supabase.py`, and queried with `sql/business_questions.sql` to answer three core questions from the problem statement.
+
+## Analysis & Insights
+
+`notebooks/insights.ipynb` answers the problem statement using `data/processed/ncr_fuel_prices.csv`. It contains summary statistics, five charts (each with an Observation / Implication / Possible Action), one cautious inference check, and an overall takeaway. All charts are also saved in `output/figures/`. The notebook reads the CSV directly, so no database credentials are needed to run it.
+
+### Key findings
+| Question | Finding |
+|---|---|
+| How did prices change over time? | Nearly flat for eight months, then a sharp jump in March 2026. Diesel went from ₱58.1/L (Mar 3 bulletin) to ₱104.8 (Mar 17), peaked at ₱148.2 (Apr 7), and was ₱90.8 on Aug 4, 2026. |
+| Which fuel was hit hardest? | At the peak, diesel was 162% above its pre-shock baseline and Diesel Plus 145%, versus 59-71% for gasoline grades. On Aug 4 diesel was still 60% above baseline. |
+| How volatile were weekly changes? | Typical week-to-week swing (diesel) grew from 1.7 to 11.0 percentage points; the largest 7-day moves were +15.6% and -19.8%. |
+| Do cities differ? | Only slightly: -3.2% (Marikina) to +2.5% (Pasay) versus the same-week NCR average. |
+| Do brands differ? | More than cities: Shell about +6%, Flying V about -6%. Shell averages ₱7.45/L (95% interval ₱7.11 to ₱7.77) above independent stations for the same fuel, city and week. |
+
+![Fuel price trend](output/figures/01_price_trend_by_fuel.png)
+
+### How to run
+```bash
+pip install -r requirements.txt
+jupyter notebook notebooks/insights.ipynb   # then Run All
+```
+
+### Method notes and limitations
+- Price = midpoint of each brand's reported low-high range; only `reported` rows are used.
+- Trend charts use the 9 cities present in every bulletin; Marikina, Navotas and Valenzuela only appear from March 2026, so cities and brands are compared against the same-week, same-fuel average instead of raw averages.
+- 9 weekly bulletins are missing inside the date range (including Mar 10, 2026), so some "week-over-week" changes actually span 2-3 weeks; these are flagged in Chart 3.
+- Coverage is NCR only, so "region" means NCR city. Regional bulletins are a planned extension.
+- The inference section compares Shell with independent stations. That pair was chosen because it is the sharpest contrast in the brand chart, so the gap is near the upper end of brand-vs-brand differences. The data is observational and cannot say why prices differ.
+- News coverage links the March 2026 surge to the Middle East conflict. This dataset shows the size and timing of the move, not its cause.
 
 ### How to run
 ```bash
