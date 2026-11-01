@@ -1,0 +1,22 @@
+city,window,mean_premium_pct,n_weeks
+Caloocan City,all_cities_from_2026-03-17,-1.079,19
+Makati City,all_cities_from_2026-03-17,0.808,19
+Manila City,all_cities_from_2026-03-17,-0.802,19
+Marikina City,all_cities_from_2026-03-17,-3.165,19
+Muntinlupa City,all_cities_from_2026-03-17,0.693,19
+Navotas City,all_cities_from_2026-03-17,1.269,19
+Parañaque City,all_cities_from_2026-03-17,1.636,19
+Pasay City,all_cities_from_2026-03-17,2.474,19
+Pasig City,all_cities_from_2026-03-17,-1.738,19
+Quezon City,all_cities_from_2026-03-17,-1.698,19
+Taguig City,all_cities_from_2026-03-17,0.856,19
+Valenzuela City,all_cities_from_2026-03-17,1.984,19
+Caloocan City,core_cities_full_history,-1.653,48
+Makati City,core_cities_full_history,0.838,46
+Manila City,core_cities_full_history,-1.524,48
+Muntinlupa City,core_cities_full_history,0.948,48
+Parañaque City,core_cities_full_history,0.677,48
+Pasay City,core_cities_full_history,3.29,48
+Pasig City,core_cities_full_history,-1.4,48
+Quezon City,core_cities_full_history,-2.217,48
+Taguig City,core_cities_full_history,0.907,48
