@@ -1,0 +1,19 @@
+city,period,premium_pct,n_weeks
+Caloocan City,calm,-1.943,29
+Makati City,calm,0.912,27
+Manila City,calm,-1.904,29
+Muntinlupa City,calm,1.209,29
+Parañaque City,calm,0.148,29
+Pasay City,calm,3.921,29
+Pasig City,calm,-1.087,29
+Quezon City,calm,-2.465,29
+Taguig City,calm,1.038,29
+Caloocan City,shock,-1.211,19
+Makati City,shock,0.733,19
+Manila City,shock,-0.944,19
+Muntinlupa City,shock,0.55,19
+Parañaque City,shock,1.485,19
+Pasay City,shock,2.327,19
+Pasig City,shock,-1.877,19
+Quezon City,shock,-1.838,19
+Taguig City,shock,0.707,19
