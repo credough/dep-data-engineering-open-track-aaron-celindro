@@ -1,0 +1,42 @@
+brand,product,premium_pct,n_rows,n_weeks,low_sample
+Caltex,Diesel,3.87,435,48,False
+Caltex,Diesel Plus,-0.2,244,48,False
+Caltex,RON 91,4.799,435,48,False
+Caltex,RON 95,7.292,435,48,False
+Flying V,Diesel,-4.666,371,47,False
+Flying V,RON 91,-4.921,371,47,False
+Flying V,RON 95,-7.817,371,47,False
+Independent,Diesel,-3.743,405,48,False
+Independent,Diesel Plus,-7.602,25,25,True
+Independent,RON 91,-4.066,405,48,False
+Independent,RON 95,-6.932,405,48,False
+Independent,RON 97,-12.04,12,12,True
+PTT,Diesel,-2.384,60,48,False
+PTT,Diesel Plus,-6.159,48,48,False
+PTT,RON 91,-2.758,60,48,False
+PTT,RON 95,-5.663,60,48,False
+Petron,Diesel,-0.979,449,48,False
+Petron,Diesel Plus,-5.512,331,48,False
+Petron,RON 91,-1.986,449,48,False
+Petron,RON 95,-4.669,449,48,False
+Phoenix,Diesel,0.352,190,48,False
+Phoenix,RON 91,0.645,190,48,False
+Phoenix,RON 95,-1.378,190,48,False
+Phoenix,RON 97,0.119,22,22,True
+Seaoil,Diesel,-1.886,355,48,False
+Seaoil,RON 91,-2.119,355,48,False
+Seaoil,RON 95,-5.541,17,17,True
+Seaoil,RON 97,-11.248,115,48,False
+Shell,Diesel,3.507,466,48,False
+Shell,Diesel Plus,6.139,331,48,False
+Shell,RON 91,4.052,466,48,False
+Shell,RON 95,10.204,466,48,False
+Shell,RON 97,7.683,137,48,False
+Total,Diesel,4.025,234,48,False
+Total,Diesel Plus,1.718,181,48,False
+Total,RON 91,5.146,234,48,False
+Total,RON 95,4.521,186,48,False
+Unioil,Diesel,0.116,337,48,False
+Unioil,RON 91,-0.195,337,48,False
+Unioil,RON 95,-0.97,336,48,False
+Unioil,RON 97,2.855,137,48,False
