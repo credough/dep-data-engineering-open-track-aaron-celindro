@@ -24,6 +24,11 @@ ORDER BY week_start, product;
 -- =====================================================================
 -- Question 2: Which NCR city has the highest and lowest average fuel
 -- prices overall?
+--
+-- CAVEAT: raw city averages are biased. Marikina, Navotas and Valenzuela only appear
+-- from March 2026, when prices were already much higher, so they look expensive for the
+-- wrong reason. The fair comparison (each city against the same-week, same-fuel average)
+-- is KPI 4: see scripts/kpis.py and docs/KPI_DEFINITIONS.md.
 -- =====================================================================
 SELECT
     city,
@@ -37,6 +42,10 @@ ORDER BY avg_price DESC;
 -- =====================================================================
 -- Question 3: Which brand tends to be the cheapest / most expensive
 -- across all NCR cities?
+--
+-- CAVEAT: raw brand averages mix in timing and fuel mix (brands are not sold in every
+-- week, city and fuel). The fair comparison (each brand against the same-city, same-week,
+-- same-fuel average) is KPI 5: see scripts/kpis.py and docs/KPI_DEFINITIONS.md.
 -- =====================================================================
 SELECT
     brand,
