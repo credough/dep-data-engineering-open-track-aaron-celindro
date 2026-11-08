@@ -1,213 +1,203 @@
 # Philippine Fuel Price Data Pipeline
 
-## Problem Statement
-I want to answer: "How have Philippine retail fuel prices (gasoline, diesel, kerosene) changed over time, and how do they vary by region and fuel type?"
+An end-to-end data engineering project that turns the Department of Energy's weekly Metro Manila fuel price bulletins (PDFs) into a clean dataset, a small set of KPIs, and plain-language insights.
 
-## How to Run
+**The question:** How have Philippine retail fuel prices (gasoline, diesel, kerosene) changed over time, and how do they vary by region and fuel type?
+
+**Headline result:** NCR fuel prices were flat for eight months, then jumped in March 2026. Diesel went from about ₱58 per liter (Mar 3) to a peak of ₱148 (Apr 7), and was still 60% above its old level on Aug 4, 2026. Read the one-page [stakeholder brief](docs/stakeholder_brief.pdf) for the plain-language version.
+
+![NCR fuel prices, Jul 2025 to Aug 2026](output/figures/01_price_trend_by_fuel.png)
+
+## Contents
+
+- [Quick start](#quick-start)
+- [How the pipeline works](#how-the-pipeline-works)
+- [Repository layout](#repository-layout)
+- [Key findings](#key-findings)
+- [Data source](#data-source)
+- [Data processing](#data-processing)
+- [Schema plan](#schema-plan)
+- [SQL business questions](#sql-business-questions)
+- [KPIs](#kpis)
+- [Analysis and insights](#analysis-and-insights)
+- [Limitations and next steps](#limitations-and-next-steps)
+
+## Quick start
+
+Requires Python 3.10 or newer (developed on 3.13).
 
 ```bash
+git clone https://github.com/credough/dep-data-engineering-open-track-aaron-celindro.git
+cd dep-data-engineering-open-track-aaron-celindro
+
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-python scripts/ingest.py              # 1. download weekly PDF bulletins to data/raw/
-python scripts/transform.py           # 2. parse PDFs into data/processed/ncr_fuel_prices.csv
-python scripts/load_to_supabase.py    # 3. load the clean dataset into Supabase
-python scripts/run_sql_questions.py   # 4. run and print the SQL business questions
-jupyter notebook notebooks/insights.ipynb   # 5. explore the charts and interpretations
+python scripts/run_pipeline.py --skip-ingest
 ```
 
-Requires a `.env` file in the project root with `SUPABASE_DB_URL=<your Supabase connection string>` (not committed to git).
+That last command works **offline and without any credentials**: the downloaded bulletins are already in `data/raw/`, so it re-parses them and rebuilds the dataset, KPIs and segment tables. Then open the notebooks in `notebooks/` to see the charts.
 
-## Audience
-This project is for consumers, journalists and researchers, and technical reviewers (recruiters, hiring managers, data engineers) evaluating real-world Data Engineering skills.
+| Command | What it does |
+|---|---|
+| `python scripts/run_pipeline.py` | Full run: download bulletins, parse, KPIs, segments (a few minutes, needs internet) |
+| `python scripts/run_pipeline.py --skip-ingest` | Reuse the PDFs already in `data/raw/` |
+| `python scripts/run_pipeline.py --skip-ingest --skip-transform` | Only recompute KPIs and segments |
+| `python scripts/run_pipeline.py --with-notebooks` | Also re-execute both notebooks |
+| `python scripts/run_pipeline.py --with-db` | Also load Supabase and run the SQL questions (needs a `.env`, see below) |
 
-## KPI or Key Metric
-The main metric I want to track is average retail price per liter, by fuel type and region, over time, with week-over-week percent change as a secondary derived metric.
+The pipeline stops at the first failing step with a clear message and a non-zero exit code. Running it twice produces identical output files.
 
-## Likely Data Source
-I will explore the DOE Oil Monitor bulletins and GlobalPetrolPrices.com's Philippines gasoline series.
-DOE Oil Monitor: https://doe.gov.ph/articles/group/liquid-fuels?category=Oil+Monitor&display_type=Card
-GlobalPetrolPrices.com: https://www.globalpetrolprices.com/Philippines/gasoline_prices/
+**Optional database step.** Copy `.env.example` to `.env` and set `SUPABASE_DB_URL` to your Supabase (Postgres) connection string. `.env` is git-ignored, so credentials are never committed.
 
-## Possible Final Dashboard
-The dashboard should help the audience quickly see current DOE prices, historical trends by fuel type, and regional comparisons, enough to answer "is now a good time to fill up, and how does my region compare?" at a glance.
+## How the pipeline works
 
-## Data Source Notes
-
-### Primary Source
-- Name: DOE NCR Price Monitoring (Department of Energy, Philippines — Oil Industry Management Bureau)
-- URL pattern: `https://prod-cms.doe.gov.ph/documents/d/guest/ncr-price-monitoring-{MMDDYYYY}-pdf`
-  (e.g. `ncr-price-monitoring-07082025-pdf` for the bulletin dated July 8, 2025)
-- Format: PDF bulletins, one per week, containing a price table (product, overall price range, common price) plus a per-city breakdown for NCR (Makati, Pasay, Parañaque, Muntinlupa, etc.)
-- Coverage: Prevailing pump prices by fuel type (gasoline RON91/95/97, diesel, diesel plus, kerosene) for NCR, published weekly since at least January 2024
-- Why it fits the problem: This is the authoritative primary source for Philippine fuel prices, with the city-level granularity needed to answer the problem statement
-- Known limitations:
-  - DOE does not publish every single week without exception — some weeks return a 404 (~19% of weeks in an initial test run), likely due to holidays or schedule shifts. Ingestion treats a missing week as an expected, non-fatal outcome, not a failure.
-  - This URL pattern currently covers **NCR only**. Regional coverage (South/North Luzon, Visayas, Mindanao) uses a related but distinct URL pattern and naming convention on the same `prod-cms.doe.gov.ph` host, to be added in a later ingestion pass.
-  - `doe.gov.ph`'s article listing pages (the human-facing bulletin index) are protected by bot detection and could not be crawled directly; `prod-cms.doe.gov.ph`, which hosts the actual PDF files, was not blocked and was used instead, with a predictable date-based URL built directly rather than discovered via crawling.
-  - robots.txt on `doe.gov.ph` was checked and does not disallow this content.
-
-### Fallback Source
-- Name: GlobalPetrolPrices.com — Philippines Gasoline Prices
-- URL: https://www.globalpetrolprices.com/Philippines/gasoline_prices/
-- Format: CSV/API (downloadable data, weekly series)
-- Coverage: Weekly Octane-95 gasoline price for the Philippines, national aggregate, from 2015-12-28 to present, sourced from the DOE
-- Why it could still work: If the primary DOE source is temporarily blocked or a bulletin is missing, this provides a continuous, DOE-sourced weekly price series to fill gaps or cross-validate extracted values
-- Known limitations: Single national aggregate value only — no brand or regional breakdown, and no diesel/kerosene series, so it cannot fully substitute for the primary source, only supplement it
-
-
-## Data Ingestion
-
-`scripts/ingest.py` downloads weekly NCR fuel price bulletins (PDF) directly from DOE by constructing predictable URLs for each week in a configurable date range, and saves each one to `data/raw/`.
-
-### How to run
-```bash
-pip install -r requirements.txt
-python scripts/ingest.py
+```
+DOE bulletins (PDF)          data/raw/
+       |  scripts/ingest.py
+       v
+parsed, validated table      data/processed/ncr_fuel_prices.csv
+       |  scripts/transform.py
+       +--> scripts/kpis.py      --> output/kpis/       5 KPIs
+       +--> scripts/segments.py  --> output/segments/   4 segment comparisons
+       +--> scripts/load_to_supabase.py --> Supabase --> sql/business_questions.sql   (optional)
+                                    |
+                      notebooks/ read the saved tables and draw output/figures/
 ```
 
-Downloaded files are saved as `data/raw/ncr_price_monitoring_YYYY-MM-DD.pdf`. The script logs each attempt; weeks with no published bulletin are skipped (not treated as errors) and logged as such.
+Each step is its own script that reads files and writes files, so any step can be run, tested or replaced alone. The notebooks only read saved outputs, so the pipeline and the notebooks cannot disagree.
 
-### Configuration
-The date range is controlled by `START_DATE` and `END_DATE` in `scripts/ingest.py`. The default range currently pulls roughly a year of historical data (~59 weekly attempts, ~48 successful downloads in initial testing).
+## Repository layout
 
-## Schema Plan
+```
+.
+├── data/
+│   ├── raw/                       weekly DOE bulletins (PDF), one per week
+│   └── processed/                 ncr_fuel_prices.csv: clean, long-format dataset
+├── scripts/
+│   ├── run_pipeline.py            run everything in order (start here)
+│   ├── ingest.py                  1. download the bulletins
+│   ├── transform.py               2. parse the PDFs into the clean dataset
+│   ├── kpis.py                    3. compute the five KPIs
+│   ├── segments.py                4. build the segment comparison tables
+│   ├── load_to_supabase.py        (optional) load the CSV into Postgres
+│   └── run_sql_questions.py       (optional) run sql/business_questions.sql
+├── sql/business_questions.sql     SQL answering the project's business questions
+├── notebooks/
+│   ├── insights.ipynb             five charts, interpretations, one inference check
+│   └── segmentation_and_kpis.ipynb  KPI framework and four segmentation views
+├── output/
+│   ├── figures/                   all charts (PNG)
+│   ├── kpis/                      KPI tables (CSV)
+│   └── segments/                  segment tables (CSV)
+├── docs/
+│   ├── KPI_DEFINITIONS.md         what each KPI means and how it is calculated
+│   └── stakeholder_brief.pdf      one-page plain-language summary
+├── dashboard/                     placeholder for the deployed dashboard
+├── .github/workflows/pages.yml    GitHub Pages deployment workflow
+├── .env.example                   template for the optional database connection
+└── requirements.txt
+```
 
-### Main Table
-- **Name:** `fuel_prices` (stored as `data/processed/ncr_fuel_prices.csv`, also loaded into Supabase Postgres for SQL analysis)
-- **Grain:** one row = one reported fuel price for a specific **brand**, in a specific **city**, for a specific **product (fuel type)**, in a specific **week**
-- **Primary key:** composite — (`week_start`, `city`, `product`, `brand`)
+## Key findings
 
-### Important Columns
-
-| Column | Meaning | Expected Type |
-|---|---|---|
-| week_start | Start date (Monday) of the bulletin's coverage week | DATE |
-| city | NCR city/municipality where the price was monitored | TEXT |
-| product | Fuel type: RON 100, RON 97, RON 95, RON 91, Diesel, Diesel Plus, Kerosene | TEXT |
-| brand | Oil company: Petron, Shell, Caltex, Phoenix, Total, Flying V, Unioil, Seaoil, PTT, Independent | TEXT |
-| price_low | Lower end of the reported price range (₱/liter) for that brand that week | NUMERIC, nullable |
-| price_high | Upper end of the reported price range (₱/liter) for that brand that week | NUMERIC, nullable |
-| status | `reported` (has a price), `no_report` (brand has an outlet but didn't submit a price that week), or `unrecognized` (parsing couldn't confidently interpret the cell) | TEXT |
-
-Rows where a brand has **no outlet at all** in a given city are not stored — they're intentionally excluded during parsing rather than represented as null rows, since "no outlet" and "no report" are meaningfully different and only the latter is worth tracking as a gap.
-
-### Related Tables/Files
-- **Raw source:** `data/raw/*.pdf` — one PDF per week, the original DOE bulletins. Not joined to `fuel_prices`; kept as the immutable source of truth in case reprocessing is ever needed.
-- No other processed tables currently exist. If regional data (South/North Luzon, Visayas, Mindanao) is added later, it would join on the same (`week_start`, `product`, `brand`) grain with `city` disambiguated by region.
-
-### Why this grain
-The project's core KPI — *average price per liter, by fuel type and region, over time, with week-over-week % change* — requires aggregating up (e.g. across brands for a city+week, or across cities for a week) without losing underlying detail. Storing at the most granular level means every rollup the analysis phase needs is just a `GROUP BY` away, rather than needing to re-parse PDFs for a different level of detail later.
-
-## Data Processing
-
-`scripts/transform.py` parses every weekly bulletin PDF in `data/raw/`
-into a single clean, long-format dataset saved to `data/processed/ncr_fuel_prices.csv`.
-
-## SQL Business Questions
-
-`data/processed/ncr_fuel_prices.csv` is loaded into a Supabase (Postgres) database via `scripts/load_to_supabase.py`, and queried with `sql/business_questions.sql` to answer three core questions from the problem statement.
-
-## Analysis & Insights
-
-`notebooks/insights.ipynb` answers the problem statement using `data/processed/ncr_fuel_prices.csv`. It contains summary statistics, five charts (each with an Observation / Implication / Possible Action), one cautious inference check, and an overall takeaway. All charts are also saved in `output/figures/`. The notebook reads the CSV directly, so no database credentials are needed to run it.
-
-### Key findings
 | Question | Finding |
 |---|---|
-| How did prices change over time? | Nearly flat for eight months, then a sharp jump in March 2026. Diesel went from ₱58.1/L (Mar 3 bulletin) to ₱104.8 (Mar 17), peaked at ₱148.2 (Apr 7), and was ₱90.8 on Aug 4, 2026. |
-| Which fuel was hit hardest? | At the peak, diesel was 162% above its pre-shock baseline and Diesel Plus 145%, versus 59-71% for gasoline grades. On Aug 4 diesel was still 60% above baseline. |
-| How volatile were weekly changes? | Typical week-to-week swing (diesel) grew from 1.7 to 11.0 percentage points; the largest 7-day moves were +15.6% and -19.8%. |
-| Do cities differ? | Only slightly: -3.2% (Marikina) to +2.5% (Pasay) versus the same-week NCR average. |
-| Do brands differ? | More than cities: Shell about +6%, Flying V about -6%. Shell averages ₱7.45/L (95% interval ₱7.11 to ₱7.77) above independent stations for the same fuel, city and week. |
+| How did prices change over time? | Nearly flat for eight months, then a sharp jump in March 2026. Diesel: ₱58.1 (Mar 3) to ₱104.8 (Mar 17) to a peak of ₱148.2 (Apr 7), and ₱90.8 on Aug 4, 2026. |
+| Which fuel was hit hardest? | At the peak, diesel was 162% above its pre-shock baseline and Diesel Plus 145%, versus 59% to 71% for gasoline grades. On Aug 4 diesel was still +60% and gasoline +35% to +43%. |
+| How volatile were weekly changes? | Typical week-to-week swing in diesel grew from 1.7 to 11.0 percentage points; the largest 7-day moves were +15.6% and -19.8%. |
+| Do cities differ? | Only slightly: -3.2% (Marikina) to +2.5% (Pasay) against the same-week NCR average, and the pattern is similar before and during the shock. |
+| Do brands differ? | More than cities, and most on premium gasoline. Shell is about +6% above the market and Flying V about -6%. Shell averages ₱7.45 per liter above independent stations for the same fuel, city and week (95% interval ₱7.11 to ₱7.77). |
+| Do brand gaps grow when prices rise? | In percent they shrink; in pesos they barely move. They behave like roughly fixed peso amounts. |
 
-![Fuel price trend](output/figures/01_price_trend_by_fuel.png)
+## Data source
 
-### How to run
-```bash
-pip install -r requirements.txt
-jupyter notebook notebooks/insights.ipynb   # then Run All
-```
+**Primary:** DOE NCR Price Monitoring bulletins (Department of Energy, Oil Industry Management Bureau), one PDF per week:
+`https://prod-cms.doe.gov.ph/documents/d/guest/ncr-price-monitoring-{MMDDYYYY}-pdf`
 
-### Method notes and limitations
-- Price = midpoint of each brand's reported low-high range; only `reported` rows are used.
-- Trend charts use the 9 cities present in every bulletin; Marikina, Navotas and Valenzuela only appear from March 2026, so cities and brands are compared against the same-week, same-fuel average instead of raw averages.
-- 9 weekly bulletins are missing inside the date range (including Mar 10, 2026), so some "week-over-week" changes actually span 2-3 weeks; these are flagged in Chart 3.
-- Coverage is NCR only, so "region" means NCR city. Regional bulletins are a planned extension.
-- The inference section compares Shell with independent stations. That pair was chosen because it is the sharpest contrast in the brand chart, so the gap is near the upper end of brand-vs-brand differences. The data is observational and cannot say why prices differ.
-- News coverage links the March 2026 surge to the Middle East conflict. This dataset shows the size and timing of the move, not its cause.
+Each bulletin holds a per-city, per-fuel, per-brand price table for Metro Manila.
 
-### How to run
-```bash
-# 1. Set up a Supabase project and add SUPABASE_DB_URL to a .env file
-#    in the project root (see .env.example)
-python scripts/load_to_supabase.py     # loads the processed CSV into Supabase
-python scripts/run_sql_questions.py    # runs and prints all queries
-```
+- **Why this URL.** DOE's article listing pages (`doe.gov.ph/articles/...`) sit behind bot detection and could not be crawled. The PDF host `prod-cms.doe.gov.ph` was not blocked, and file names follow a predictable date pattern, so URLs are built directly instead of crawled. `robots.txt` on `doe.gov.ph` was checked and does not disallow this content. Requests are rate-limited (1.5 seconds apart) and identify themselves.
+- **Not every week exists.** Nine weekly bulletins between Jul 8, 2025 and Aug 4, 2026 are missing (including Mar 10, 2026). Ingestion treats a missing week as an expected, non-fatal outcome and logs it.
+- **NCR only.** Regional bulletins (Luzon, Visayas, Mindanao) use a different URL pattern and are not ingested yet.
 
-### Questions answered
-1. **How does the average price per liter change over time, by fuel type?** — supports the project's core trend KPI.
-2. **Which NCR city has the highest and lowest average fuel prices overall?**
-3. **Which brand tends to be the cheapest / most expensive across all NCR cities?**
+**Considered, not used:** GlobalPetrolPrices.com's Philippines gasoline series (a national weekly aggregate) was identified as a possible cross-check, but it has no brand, city or diesel/kerosene detail and is not part of the pipeline.
 
-A bonus fourth query computes week-over-week % change in average price by fuel type, directly supporting the project's secondary KPI.
+## Data processing
 
-### Load strategy
-`load_to_supabase.py` does a **full refresh** (truncate + reinsert) on every run, since this pipeline reprocesses the full raw history each time rather than appending incrementally. See "Known data quality findings" above for why this matters.
+`scripts/transform.py` parses every bulletin in `data/raw/` into one long-format table, `data/processed/ncr_fuel_prices.csv` (48 bulletins, 13,197 rows, 12 cities, 10 brands, 7 fuel types).
 
-### Output
-One row per (week_start, city, product, brand):
+**Why a custom parser.** Each row in the PDF is visually split across two overlapping text lines (numbers and labels), which breaks standard table extraction. The script reads each word's exact position on the page and rebuilds rows and columns from measured coordinates.
 
-| Column | Description |
-|---|---|
-| week_start | Monday of the bulletin's coverage week (from filename) |
-| city | NCR city/municipality |
-| product | Fuel type (RON 100, RON 97, RON 95, RON 91, Diesel, Diesel Plus, Kerosene) |
-| brand | Oil company (Petron, Shell, Caltex, Phoenix, Total, Flying V, Unioil, Seaoil, PTT, Independent) |
-| price_low / price_high | Reported price range (₱/liter) for that brand that week |
-| status | `reported`, `no_report` (brand has an outlet but didn't submit a price that week), or `unrecognized` |
+Problems found in the source while building it, and how they are handled:
 
-### How to run
-```bash
-pip install -r requirements.txt
-python scripts/transform.py
-```
+- **Format drift.** DOE shifted column positions in early 2026, then switched to a page roughly 2.4 times larger by April 2026. A parser with hard-coded coordinates silently returned zero rows. The parser now measures each PDF's own header row at runtime.
+- **A ghost label in DOE's template.** Every bulletin carries a hidden duplicate "Caloocan City" label under page 2's first city, which merges into garbage text ("CMalaokoactai nC iCtyity"). It is separated at the parsing stage and backed by a whitelist of real NCR cities as a safety net.
+- **Cities split across pages.** As DOE added cities (9 to 12), some cities' rows now span the page break. Rows are grouped into city blocks across the whole document, not per page.
+- **Validation.** Of 13,257 parsed rows, 60 (0.45%) were dropped and logged: 12 with non-positive prices and 48 with an unrecognised city. Inverted price ranges are swapped and duplicates are flagged.
+- **Load strategy.** The Supabase load truncates and reloads the table every run. An upsert alone would leave stale rows behind after a parser fix (this happened once during development).
 
-### Why a custom parser instead of a standard PDF-table library
-The bulletin's rows are visually split across two overlapping text lines
-(numbers vs. labels), which breaks automatic table detection. This script
-instead reads each word's exact position on the page and reconstructs
-rows/columns from measured coordinates.
+## Schema plan
 
-### Known data quality findings (discovered during development)
-- **Source format drift**: DOE changed the bulletin's column positions in
-  early 2026, then switched to a completely different page size (~2.4x
-  larger) by April 2026. The parser measures each PDF's own header row at
-  runtime instead of using fixed coordinates, so it adapts automatically
-  rather than silently failing when the source changes.
-- **Template artifact**: every bulletin checked (Jul 2025 – Aug 2026) has
-  a hidden, leftover duplicate of "Caloocan City" rendered almost exactly
-  on top of page 2's first city label. This is a quirk in DOE's own Excel
-  template, not a bug in this script. It's filtered at the parsing stage,
-  and backed by a second safety net: every parsed city is checked against
-  a whitelist of known real NCR cities, since the pixel offset between
-  the ghost text and the real label wasn't always large enough for the
-  parsing-stage fix alone to catch it on every single week.
-- **Split city blocks**: as DOE added more NCR cities to the report
-  (12 cities by 2026 vs. 9 originally), some cities' data now splits
-  across the page 1/page 2 boundary. The parser tracks the last known
-  city across the whole document to handle this correctly.
-- **Validation drops**: of 13,257 parsed rows, 60 (0.45%) were dropped —
-  12 with non-positive prices, and 48 with an unrecognized city value
-  caught by the whitelist safeguard above. Both are logged with the exact
-  bad value(s) so they're traceable, not silently discarded.
-- **Supabase load strategy**: the load script does a full table refresh
-  (truncate + reinsert) on every run rather than an upsert-only append.
-  An upsert alone inserts new rows and updates matching ones, but never
-  removes rows whose key no longer exists in the latest CSV — during
-  development, a bug fix in `transform.py` correctly stopped producing a
-  bad row, but the *already-loaded* bad row stayed in Supabase until the
-  load strategy was changed to a full refresh.
+**Table:** `fuel_prices` (`data/processed/ncr_fuel_prices.csv`, also loaded into Supabase).
+**Grain:** one row = one reported price for one **brand**, in one **city**, for one **fuel**, in one **week**.
+**Primary key:** (`week_start`, `city`, `product`, `brand`).
 
-### Result
-48 weekly bulletins (Jul 2025 – Aug 2026) → 13,197 clean rows in
-`data/processed/ncr_fuel_prices.csv`.
+| Column | Meaning | Type |
+|---|---|---|
+| `week_start` | Start date of the bulletin's coverage week | date |
+| `city` | NCR city or municipality | text |
+| `product` | RON 100, RON 97, RON 95, RON 91, Diesel, Diesel Plus, Kerosene | text |
+| `brand` | Petron, Shell, Caltex, Phoenix, Total, Flying V, Unioil, Seaoil, PTT, Independent | text |
+| `price_low`, `price_high` | Reported price range for that brand (₱ per liter) | numeric |
+| `status` | `reported`, or `no_report` (the brand has an outlet but submitted no price that week) | text |
+
+Brand-city combinations with no outlet at all are not stored, because "no outlet" and "no report" mean different things and only the latter is a gap worth tracking. Storing at the brand level keeps every roll-up (by city, fuel or week) one `GROUP BY` away.
+
+## SQL business questions
+
+`sql/business_questions.sql` answers four questions against the Supabase table (run with `python scripts/run_sql_questions.py`):
+
+1. How does the average price change over time, by fuel type?
+2. Which NCR city has the highest and lowest average prices?
+3. Which brand is cheapest and most expensive overall?
+4. Bonus: week-over-week % change by fuel (window function).
+
+> **Caveat on questions 2 and 3.** They compare raw averages, which are biased: Marikina, Navotas and Valenzuela only appear from March 2026, when prices were already far higher, so they look dear for the wrong reason. The fair versions (each city or brand against the same-week, same-fuel average) are KPIs 4 and 5, computed in `scripts/kpis.py`.
+
+## KPIs
+
+Five KPIs trace back to the question. Full definitions, formulas and caveats are in [`docs/KPI_DEFINITIONS.md`](docs/KPI_DEFINITIONS.md).
+
+| # | KPI | Output |
+|---|---|---|
+| 1 | NCR average price (₱ per liter), by fuel | `output/kpis/kpi_weekly_by_fuel.csv` |
+| 2 | % above the pre-shock baseline | `output/kpis/kpi_weekly_by_fuel.csv` |
+| 3 | Week-over-week % change (exact 7-day gaps only) | `output/kpis/kpi_weekly_by_fuel.csv` |
+| 4 | City premium vs the same-week, same-fuel NCR average | `output/kpis/kpi_city_premium.csv` |
+| 5 | Brand premium vs the same-city, same-week, same-fuel average | `output/kpis/kpi_brand_premium.csv` |
+
+`output/kpis/kpi_scorecard.csv` holds a latest-and-peak snapshot per fuel, ready for a dashboard.
+
+## Analysis and insights
+
+- **`notebooks/insights.ipynb`** (summary statistics, five charts with an Observation / Implication / Possible Action under each, and one cautious inference check on Shell vs independent stations).
+- **`notebooks/segmentation_and_kpis.ipynb`** (the KPI scorecard and four two-dimensional segmentations: fuel x month, brand x fuel, brand x period, city x period). Segment tables are saved in `output/segments/`.
+- **[`docs/stakeholder_brief.pdf`](docs/stakeholder_brief.pdf)** is a one-page plain-language summary with three recommended actions for consumers and journalists.
+
+Both notebooks read saved files only, and have their outputs embedded, so they render on GitHub without running anything.
+
+## Limitations and next steps
+
+**Limitations**
+- NCR cities only, so "region" in the question means NCR city.
+- Nine weekly bulletins are missing, so some "week-over-week" changes span two or three weeks (flagged in the KPI table).
+- Prices are midpoints of DOE-reported ranges, not individual pump prices.
+- The analysis describes what changed, not why. News coverage linked the March 2026 surge to the Middle East conflict, but nothing here tests causes.
+- No forecasting: with 48 bulletins and a structural break in March 2026, a model would have little to learn from, and the question is descriptive.
+
+**Next steps**
+- Deploy a dashboard from `output/kpis/` and `output/segments/` to GitHub Pages (`dashboard/`).
+- Ingest regional bulletins to answer the "by region" part of the question for the whole country.
+- Add fair, window-function versions of SQL questions 2 and 3.

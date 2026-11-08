@@ -7,3 +7,7 @@ reference-docs/
 AGENTS.md
 DESIGN.md
 CONTEXT.md
+
+.venv/
+__pycache__/
+.ipynb_checkpoints/

@@ -1,7 +1,18 @@
-requests
-pdfplumber
-pandas
-psycopg2-binary
-python-dotenv
-jupyter
-matplotlib
+# Philippine Fuel Price Data Pipeline
+# Python 3.10+ (developed on 3.13)
+
+# 1. Ingestion
+requests>=2.31
+
+# 2. Transformation (PDF parsing)
+pdfplumber>=0.10
+pandas>=2.0
+
+# 3. KPIs, segments and notebooks
+numpy>=1.24
+matplotlib>=3.7
+jupyter>=1.0        # also provides nbconvert, used by run_pipeline.py --with-notebooks
+
+# 4. Optional: Supabase (Postgres) load and SQL questions
+psycopg2-binary>=2.9
+python-dotenv>=1.0
